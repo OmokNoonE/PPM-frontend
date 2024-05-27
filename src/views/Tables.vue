@@ -5,8 +5,7 @@
         <div class="card my-4">
           <!-- 카드 헤더 -->
           <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
-            <div
-                class="bg-gradient-success shadow-success border-radius-lg pt-4 pb-3 d-flex justify-content-between align-items-center">
+            <div class="bg-gradient-success shadow-success border-radius-lg pt-4 pb-3 d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center ps-3">
                 <i class="material-icons text-white me-2">groups</i>
                 <h6 class="text-white text-capitalize mb-0">프로젝트 구성원</h6>
@@ -29,18 +28,14 @@
                 <tr>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-3">이름</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-1">직책</th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center ps-2">연락처
-                  </th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-4">시작일
-                  </th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center ps-2">연락처</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-4">시작일</th>
                   <th class="text-secondary opacity-7"></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-if="projectMembersLoading">
-                  <td colspan="5" class="text-center">
-                    <span class="text-secondary">로딩 중...</span>
-                  </td>
+                  <td colspan="5" class="text-center"><span class="text-secondary">로딩 중...</span></td>
                 </tr>
                 <tr v-if="!projectMembersLoading && (!projectMembers || projectMembers.length === 0)">
                   <td colspan="5" class="text-center text-muted" style="height: 320px;">
@@ -59,9 +54,9 @@
                     <p class="text-xs font-weight-bold mb-0">{{ projectMember.role }}</p>
                   </td>
                   <td class="align-middle text-center text-sm">
-                    <span class="text-secondary text-xs font-weight-bold text-left d-inline-block">E-mail. {{
-                        projectMember.email
-                      }}<br><span class="ps-1">Phone. {{ projectMember.phone }}</span></span>
+                      <span class="text-secondary text-xs font-weight-bold text-left d-inline-block">
+                        E-mail. {{ projectMember.email }}<br/><span class="ps-1">Phone. {{ projectMember.phone }}</span>
+                      </span>
                   </td>
                   <td class="align-middle text-left text-sm">
                     <span class="text-secondary text-xs font-weight-bold">{{ projectMember.startDate }}</span>
@@ -69,9 +64,7 @@
                   <td class="align-middle">
                     <button class="btn btn-link text-secondary mb-0"
                             @click="confirmRemoveProjectMember(projectMember.id)" data-toggle="tooltip"
-                            data-original-title="팀에서 제외">
-                      x
-                    </button>
+                            data-original-title="팀에서 제외">x</button>
                   </td>
                 </tr>
                 </tbody>
@@ -84,11 +77,12 @@
 
     <!-- 구성원 추가 모달 -->
     <AddProjectMemberCard v-if="isAddModalVisible" :available-members="availableMembers"
-                          @close="isAddModalVisible = false" @add-members="addMembers"></AddProjectMemberCard>
+                          @close="isAddModalVisible = false" @add-members="addMembers"
+    ></AddProjectMemberCard>
     <!-- 직책 변경 모달 -->
     <ModifyProjectMemberRoleCard v-if="isModifyModalVisible" :project-members="projectMembers"
-                                 @close="isModifyModalVisible = false"
-                                 @save-changes="saveChanges"></ModifyProjectMemberRoleCard>
+                                @close="isModifyModalVisible = false" @save-changes="saveChanges">
+    </ModifyProjectMemberRoleCard>
   </div>
 </template>
 
@@ -185,7 +179,7 @@ const saveChanges = async (selectedMembers) => {
 
 // 컴포넌트가 마운트될 때 프로젝트 ID를 설정하고 데이터를 가져옴
 onMounted(async () => {
-  store.commit('SET_PROJECT_ID', props.projectId);
+  store.commit('SET_SELECTED_PROJECT_ID', props.projectId);
   await fetchProjectMembers();
   await fetchAvailableMembers();
 });
