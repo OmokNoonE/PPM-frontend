@@ -27,8 +27,7 @@
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-3">선택</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-3">이름</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-1">직책</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center ps-2">연락처
-                </th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center ps-2">연락처</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-left ps-4">가입일</th>
               </tr>
               </thead>
@@ -43,10 +42,10 @@
                   <span class="no-members-text">검색 결과가 없습니다.</span>
                 </td>
               </tr>
-              <tr v-for="member in displayedMembers" :key="member.id">
+              <tr v-for="member in displayedMembers" :key="member.employeeId">
                 <td class="text-left">
                   <!-- 구성원 선택 체크박스 -->
-                  <MaterialCheckbox v-model="selectedMembers" :value="member.id"/>
+                  <MaterialCheckbox v-model="selectedMembers" :value="member.employeeId"/>
                 </td>
                 <td class="text-left">
                   <div class="d-flex px-2 py-1">
@@ -93,9 +92,9 @@
 <script setup>
 import {ref, onMounted, computed, watch} from 'vue';
 import {useStore} from 'vuex';
-import MaterialInput from '@/components/MaterialInput.vue'; // MaterialInput 컴포넌트 임포트
-import MaterialButton from '@/components/MaterialButton.vue'; // MaterialButton 컴포넌트 임포트
-import MaterialCheckbox from '@/components/MaterialCheckbox.vue'; // MaterialCheckbox 컴포넌트 임포트
+import MaterialInput from '@/components/MaterialInput.vue';
+import MaterialButton from '@/components/MaterialButton.vue';
+import MaterialCheckbox from '@/components/MaterialCheckbox.vue';
 import {useToast} from 'vue-toastification';
 
 // 부모 컴포넌트에서 전달된 속성 정의
@@ -109,15 +108,15 @@ const props = defineProps({
 // 이벤트를 부모 컴포넌트로 전달하기 위한 설정
 const emit = defineEmits(['close', 'add-members']);
 
-const selectedMembers = ref([]); // 선택된 구성원 목록을 저장
-const searchQuery = ref(''); // 검색어를 저장
+const selectedMembers = ref([]);    // 선택된 구성원 목록을 저장
+const searchQuery = ref('');        // 검색어를 저장
 const store = useStore();
 const toast = useToast();
 const availableMembersLoading = ref(false); // 추가 가능한 구성원 로딩 상태
-const searchResults = ref([]); // 검색 결과를 저장
-const availableMembersData = computed(() => store.state.availableMembers || []); // 원래의 추가 가능한 구성원 목록 가져오기
+const searchResults = ref([]);              // 검색 결과를 저장
+const availableMembersData = computed(() => store.state.availableMembers || []);
 
-const searching = ref(false); // 검색 여부를 저장
+const searching = ref(false);       // 검색 결과를 저장
 
 const displayedMembers = computed(() => {
   if (searching.value) {
@@ -139,7 +138,7 @@ const searchMembers = async () => {
       toast.info('검색 결과가 없습니다.');
     }
   } catch (error) {
-    toast.error('검색 중 네트워크 오류가 발생했습니다.'); // 에러 메시지 처리
+    toast.error('검색 중 네트워크 오류가 발생했습니다.');
   } finally {
     availableMembersLoading.value = false;
   }
@@ -152,11 +151,14 @@ const addMembers = async () => {
     return;
   }
   try {
-    emit('add-members', selectedMembers.value);
+    emit('add-members', selectedMembers.value.map(id => {
+      const member = displayedMembers.value.find(m => m.employeeId === id);
+      return {employeeId: member.employeeId, role: member.role};
+    }));
     toast.success('구성원이 성공적으로 추가되었습니다.');
     selectedMembers.value = [];
   } catch (error) {
-    toast.error('구성원 추가 중 오류가 발생했습니다.'); // 에러 메시지 처리
+    toast.error('구성원 추가 중 오류가 발생했습니다.');
   }
 };
 
@@ -184,14 +186,14 @@ onMounted(async () => {
   await store.dispatch('fetchAvailableMembers');
   selectedMembers.value = props.availableMembers.map(member => ({
     ...member,
-    role: 'PA', // 기본 직책을 PA로 설정
+    role: 'PA',
   }));
 });
 </script>
 
 <style scoped>
 .modal {
-  background: rgba(0, 0, 0, 0.5); /* 모달 배경 반투명 처리 */
+  background: rgba(0, 0, 0, 0.5);   /* 모달 배경 반투명 처리 */
   position: fixed;
   top: 0;
   left: 0;
@@ -207,8 +209,8 @@ onMounted(async () => {
   border-radius: 5px;
   padding: 20px;
   max-width: 800px;
-  width: 70%;
-  height: 70%; /* 모달의 높이를 고정 */
+  width: 70%;   /* 모달의 높이를 고정 */
+  height: 70%;
 }
 
 .modal-content {
@@ -216,7 +218,7 @@ onMounted(async () => {
 }
 
 .modal-body {
-  height: 70%; /* 모달 본문의 높이를 설정 */
+  height: 70%;  /* 모달 본문의 높이를 설정 */
   overflow-y: auto; /* 세로 스크롤 활성화 */
 }
 
@@ -233,7 +235,7 @@ onMounted(async () => {
 .search-container {
   display: flex;
   align-items: center;
-  width: 50%; /* 검색 창의 크기를 절반으로 설정 */
+  width: 50%;   /* 검색 창의 크기를 절반으로 설정 */
 }
 
 .search-icon {
@@ -244,15 +246,15 @@ onMounted(async () => {
 @media (max-width: 576px) {
   .modal-dialog {
     width: 90%;
-    height: 90%; /* 작은 화면에서 모달의 높이 조정 */
+    height: 90%;    /* 작은 화면에서 모달의 높이 조정 */
   }
 
   .modal-content {
-    height: 100%; /* 고정 높이를 설정 */
+    height: 100%;   /* 고정 높이를 설정 */
   }
 
   .modal-body {
-    height: 80%; /* 모달 본문의 높이를 설정 */
+    height: 80%;    /* 모달 본문의 높이를 설정 */
     overflow-y: auto; /* 세로 스크롤 활성화 */
   }
 
@@ -270,7 +272,7 @@ onMounted(async () => {
   }
 
   .search-container {
-    width: 100%; /* 작은 화면에서 검색 창의 크기를 100%로 설정 */
+    width: 100%;
   }
 }
 </style>

@@ -22,10 +22,10 @@
               </tr>
               </thead>
               <tbody>
-              <tr v-for="member in projectMembers" :key="member.id"
-                  :class="{ 'is-selected': selectedMemberIds.includes(member.id) }">
+              <tr v-for="member in projectMembers" :key="member.projectMemberId"
+                  :class="{ 'is-selected': selectedMemberIds.includes(member.projectMemberId) }">
                 <td class="text-left">
-                  <MaterialCheckbox v-model="selectedMemberIds" :value="member.id"/>
+                  <MaterialCheckbox v-model="selectedMemberIds" :value="member.projectMemberId"/>
                 </td>
                 <td class="text-left">
                   <div class="d-flex px-2 py-1">
@@ -36,7 +36,7 @@
                 </td>
                 <td class="text-left">
                   <select v-model="member.role" class="form-select form-select-sm"
-                          :disabled="!selectedMemberIds.includes(member.id)">
+                          :disabled="!selectedMemberIds.includes(member.projectMemberId)">
                     <option value="PA">PA</option>
                     <option value="PL">PL</option>
                     <option value="PM">PM</option>
@@ -88,7 +88,7 @@ const saveChanges = async () => {
     toast.error('직책을 변경할 구성원을 선택해 주세요.');
     return;
   }
-  const selectedMembers = props.projectMembers.filter(member => selectedMemberIds.value.includes(member.id));
+  const selectedMembers = props.projectMembers.filter(member => selectedMemberIds.value.includes(member.projectMemberId));
   if (selectedMembers.length === 0) {
     toast.error('유효하지 않은 구성원입니다.');
     return;

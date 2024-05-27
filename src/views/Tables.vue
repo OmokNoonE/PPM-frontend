@@ -42,7 +42,7 @@
                     <span class="no-members-text">프로젝트에 참여하는 구성원이 없습니다.</span>
                   </td>
                 </tr>
-                <tr v-else v-for="projectMember in projectMembers" :key="projectMember.id">
+                <tr v-else v-for="projectMember in projectMembers" :key="projectMember.projectMemberId">
                   <td class="text-left">
                     <div class="d-flex px-2 py-1">
                       <div class="d-flex flex-column justify-content-center">
@@ -63,8 +63,9 @@
                   </td>
                   <td class="align-middle">
                     <button class="btn btn-link text-secondary mb-0"
-                            @click="confirmRemoveProjectMember(projectMember.id)" data-toggle="tooltip"
-                            data-original-title="팀에서 제외">x</button>
+                            @click="confirmRemoveProjectMember(projectMember.projectMemberId)" data-toggle="tooltip"
+                            data-original-title="팀에서 제외">x
+                    </button>
                   </td>
                 </tr>
                 </tbody>
@@ -81,7 +82,7 @@
     ></AddProjectMemberCard>
     <!-- 직책 변경 모달 -->
     <ModifyProjectMemberRoleCard v-if="isModifyModalVisible" :project-members="projectMembers"
-                                @close="isModifyModalVisible = false" @save-changes="saveChanges">
+                                 @close="isModifyModalVisible = false" @save-changes="saveChanges">
     </ModifyProjectMemberRoleCard>
   </div>
 </template>
@@ -134,7 +135,7 @@ const addMembers = async (selectedMembers) => {
 
   try {
     for (const member of selectedMembers) {
-      await store.dispatch('addProjectMember', {memberId: member.id, role: member.role});
+      await store.dispatch('addProjectMember', {employeeId: member.id, role: member.role});
     }
     toast.success('구성원이 성공적으로 추가되었습니다.');
   } catch (error) {
@@ -166,7 +167,7 @@ const confirmRemoveProjectMember = async (projectMemberId) => {
 const saveChanges = async (selectedMembers) => {
   try {
     for (const member of selectedMembers) {
-      await store.dispatch('updateProjectMemberRole', {memberId: member.id, role: member.role});
+      await store.dispatch('modifyProjectMember', {projectMemberId: member.id, role: member.role});
     }
     toast.success('구성원의 직책이 성공적으로 변경되었습니다.');
   } catch (error) {

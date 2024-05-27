@@ -16,25 +16,25 @@ export const store = createStore({
         SET_PROJECTS(state, projects) {
             state.projects = projects;
         },
-        SET_PROJECT_MEMBERS(state, members) {
-            state.projectMembers = members;
+        SET_PROJECT_MEMBERS(state, projectMembers) {
+            state.projectMembers = projectMembers;
         },
-        SET_AVAILABLE_MEMBERS(state, members) {
-            state.availableMembers = members;
+        SET_AVAILABLE_MEMBERS(state, availableMembers) {
+            state.availableMembers = availableMembers;
         },
-        ADD_PROJECT_MEMBER(state, member) {
-            state.projectMembers.push(member);
+        ADD_PROJECT_MEMBER(state, projectMember) {
+            state.projectMembers.push(projectMember);
         },
-        REMOVE_PROJECT_MEMBER(state, memberId) {
-            const member = state.projectMembers.find((m) => m.id === memberId);
-            if (member) {
-                member.isDeleted = true;
+        REMOVE_PROJECT_MEMBER(state, projectMemberId) {
+            const projectMember = state.projectMembers.find((m) => m.projectMemberId === projectMemberId);
+            if (projectMember) {
+                projectMember.isDeleted = true;
             }
         },
-        UPDATE_PROJECT_MEMBER_ROLE(state, {memberId, role}) {
-            const member = state.projectMembers.find((m) => m.id === memberId);
-            if (member) {
-                member.role = role;
+        UPDATE_PROJECT_MEMBER_ROLE(state, {projectMemberId, role}) {
+            const projectMember = state.projectMembers.find((m) => m.projectMemberId === projectMemberId);
+            if (projectMember) {
+                projectMember.role = role;
             }
         },
         SET_SELECTED_PROJECT_ID(state, projectId) {
@@ -49,14 +49,14 @@ export const store = createStore({
         SET_SEARCH_QUERY(state, query) {
             state.searchQuery = query;
         },
-        SET_SEARCH_RESULTS(state, results) {
-            state.searchResults = results;
+        SET_SEARCH_RESULTS(state, searchResults) {
+            state.searchResults = searchResults;
         },
     },
     actions: {
         async fetchProjects({commit}) {
             try {
-                const response = await axios.get('/api/projects');
+                const response = await axios.get('/projects');
                 commit('SET_PROJECTS', response.data);
             } catch (err) {
                 console.error('프로젝트 목록을 가져오는 중 오류 발생:', err);
@@ -65,8 +65,8 @@ export const store = createStore({
         async fetchProjectMembers({commit, state}) {
             commit('SET_PROJECT_MEMBERS_LOADING', true);
             try {
-                const response = await axios.get(`/api/projectMembers/project-members?projectId=${state.selectedProjectId}`);
-                commit('SET_PROJECT_MEMBERS', response.data);
+                const response = await axios.get(`/projectMembers/list/${state.selectedProjectId}`);
+                commit('SET_PROJECT_MEMBERS', response.data.viewProjectMembersByProject);
             } catch (err) {
                 console.error('프로젝트 구성원을 가져오는 중 오류 발생:', err);
             } finally {
@@ -77,45 +77,47 @@ export const store = createStore({
             commit('SET_AVAILABLE_MEMBERS_LOADING', true);
             commit('SET_SEARCH_QUERY', query);
             try {
-                const response = await axios.get(`/api/projectMembers/available-members?projectId=${state.selectedProjectId}&query=${query}`);
-                commit('SET_SEARCH_RESULTS', response.data);
+                const response = await axios.get(`/projectMembers/availableMembers/${state.selectedProjectId}`, {
+                    params: {query}
+                });
+                commit('SET_SEARCH_RESULTS', response.data.viewAvailableMembers);
             } catch (err) {
                 console.error('구성원 목록을 가져오는 중 오류 발생:', err);
             } finally {
                 commit('SET_AVAILABLE_MEMBERS_LOADING', false);
             }
         },
-        async addProjectMember({commit, state}, {memberId, role}) {
+        async addProjectMember({commit, state}, {employeeId, role}) {
             try {
-                const response = await axios.post('/api/projectMembers/project-members', {
-                    employeeId: memberId,
+                const response = await axios.post('/projectMembers/create', {
+                    employeeId: employeeId,
                     projectId: state.selectedProjectId,
                     role: role,
                 });
-                commit('ADD_PROJECT_MEMBER', response.data);
+                commit('ADD_PROJECT_MEMBER', response.data.createProjectMember);
             } catch (err) {
                 console.error('프로젝트 구성원을 추가하는 중 오류 발생:', err);
                 throw new Error('프로젝트 구성원을 추가하는 중 오류가 발생했습니다.');
             }
         },
-        async removeProjectMember({commit, state}, memberId) {
+        async removeProjectMember({commit, state}, projectMemberId) {
             try {
-                await axios.put(`/api/projectMembers/project-members/${memberId}`, {
+                await axios.put(`/projectMembers/remove/${projectMemberId}`, {
                     projectId: state.selectedProjectId,
                 });
-                commit('REMOVE_PROJECT_MEMBER', memberId);
+                commit('REMOVE_PROJECT_MEMBER', projectMemberId);
             } catch (err) {
                 console.error('프로젝트 구성원을 제외하는 중 오류 발생:', err);
                 throw new Error('프로젝트 구성원을 제외하는 중 오류가 발생했습니다.');
             }
         },
-        async updateProjectMemberRole({commit, state}, {memberId, role}) {
+        async modifyProjectMember({commit, state}, {projectMemberId, role}) {
             try {
-                await axios.put(`/api/projectMembers/project-members/${memberId}/role`, {
+                await axios.put(`/projectMembers/modify/${projectMemberId}`, {
                     role: role,
                     projectId: state.selectedProjectId,
                 });
-                commit('UPDATE_PROJECT_MEMBER_ROLE', {memberId, role});
+                commit('UPDATE_PROJECT_MEMBER_ROLE', {projectMemberId, role});
             } catch (err) {
                 console.error('프로젝트 구성원 직책을 업데이트하는 중 오류 발생:', err);
                 throw new Error('프로젝트 구성원 직책을 업데이트하는 중 오류가 발생했습니다.');
@@ -124,12 +126,12 @@ export const store = createStore({
         selectProject({commit, dispatch}, projectId) {
             commit('SET_SELECTED_PROJECT_ID', projectId);
             dispatch('fetchProjectMembers');
-            dispatch('fetchAvailableMembers');
+            dispatch('fetchAvailableMembers', {query: ''});
         },
     },
     getters: {
         filteredProjectMembers(state) {
-            return state.projectMembers.filter((member) => !member.isDeleted);
+            return state.projectMembers.filter((projectMember) => !projectMember.isDeleted);
         },
         searchResults(state) {
             return state.searchResults;
